@@ -10,30 +10,48 @@
  */
 
 if (!defined('ABSPATH')) {
-    // Exit if accessed directly
+    // Exit if accessed directly.
+
     exit;
 }
+
+/**
+ *  Class kb_controller
+ */
 
 class kb_Controller
 {
     /**
-     * Add actions.
+     * Construct function
      */
     public function __construct()
     {
+        /* Use wp_mail_content_type hook to change the content type */
         add_filter('wp_mail_content_type', array($this,'set_content_type'));
+
+        /* Use admin_menu hook for adding custom admin menu */
         add_action('admin_menu', array($this,'kb_admin_menu'));
+
+        /* Load up files for bulk email page */
         add_action('admin_enqueue_scripts', array($this,'kb_email_script'));
+
+        /* Load up files for test email page */
         add_action('admin_enqueue_scripts', array($this,'kb_template_script'));
+
+        /* Execute ajax callback function */
         add_action('wp_ajax_email_template_hook', array($this,'kb_email_template'));
         add_action('wp_ajax_my_email_hook', array($this,'kb_email_event'));
-        add_filter('cron_schedules', array($this,'kb_cron_job_interval'));
-        add_action('custom_send_email', array($this,'kb_generate_email'));
         add_action('wp_ajax_my_ajax_hook', array($this,'kb_ajax_event'));
+
+        /* Create a custom schedule for one minute */
+        add_filter('cron_schedules', array($this,'kb_cron_job_interval'));
+
+        /* Schedule custom cron */
+        add_action('custom_send_email', array($this,'kb_generate_email'));
     }
 
     /**
-     * Set content type of email to be send
+     * Set content type 'text/html'
      *
      * @since 1.0.0
      *
@@ -52,8 +70,8 @@ class kb_Controller
     public function kb_admin_menu()
     {
         $GLOBALS['email-template'] = add_menu_page(
-            'Bulk Mail',
-            'Bulk Mail',
+            'Bulk Email',
+            'Bulk Email',
             'manage_options',
             'kb-template.php',
             array($this,'kb_template_content'),
@@ -73,7 +91,7 @@ class kb_Controller
     }
 
     /**
-     * Callback function for content of email template
+     * Display callback function for bulk email page
      *
      * @since 1.0.0
      *
@@ -93,6 +111,9 @@ class kb_Controller
         $option_name     = 'mail_template';
         $default_content = html_entity_decode($default_content);
         $default_content = stripslashes($default_content);
+
+        /* Create wysiwyg editor for email template */
+
         wp_editor($default_content, $editor_id, array(
             'textarea_name' => $option_name,
             'media_buttons' => false,
@@ -111,7 +132,7 @@ class kb_Controller
     }
     
     /**
-     * Callback function for content of test email
+     * Display callback function for email test page
      *
      * @since 1.0.0
      *
@@ -127,7 +148,14 @@ class kb_Controller
             <p class="desc"><?php _e('Enter email address where test email will be sent.'); ?></p>  
             <hr><br>
             <button class="email_btn"><?php _e('Send Email'); ?></button>
-            <img src="<?php echo plugin_dir_url(__FILE__).'assets/image/load.gif' ?>" class="loader" alt="Loader" height=20 width=20 style="margin-left:10px;">
+            <img 
+                src="<?php echo plugin_dir_url(__FILE__).'assets/image/load.gif' ?>" 
+                class="loader" 
+                alt="Loader"
+                height=20 
+                width=20 
+                style="margin-left:10px;"
+            >
         </form>
         <br>
         <div class="msg"></div>
@@ -222,18 +250,21 @@ class kb_Controller
     }
 
     /**
-     * Adding custom interval
+     * Create cron timer of one minute
      *
      * @since 1.0.0
      *
+     * @param Array $schedules
      */
     public function kb_cron_job_interval($schedules)
     {
-        $schedules['one_minute'] = array(
-            'interval' => 60,
-            'display'  => __('Every one minute'),
-        );
-        return $schedules;
+        if (! isset($schedules['one_minute'])) {
+            $schedules['one_minute'] = array(
+                'interval' => 60,
+                'display'  => __('Every one minute'),
+            );
+            return $schedules;
+        }
     }
 
     /**
