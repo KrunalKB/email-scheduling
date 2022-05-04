@@ -18,7 +18,7 @@ class kb_Controller
 {
     /**
      * Add actions.
-      */
+     */
     public function __construct()
     {
         add_filter('wp_mail_content_type', array($this,'set_content_type'));
