@@ -1,0 +1,28 @@
+#sendEmail,
+#saveEmail {
+  background-color: #2271b1;
+  border-color: #2271b1;
+  color: #fff;
+  border: 0;
+  border-radius: 3px;
+  cursor: pointer;
+  font-weight: 600;
+  height: 30px;
+}
+
+#sendEmail:hover,
+#saveEmail:hover {
+  background-color: #1e90ff;
+}
+
+.response,
+.resp {
+  border: 1px solid #c3c4c7;
+  border-left: 4px solid #00a32a;
+  margin-right: 20px;
+  height: 20px;
+  padding: 8px 8px;
+  background: #fff;
+  color: #000;
+  margin-top: 10px;
+}
