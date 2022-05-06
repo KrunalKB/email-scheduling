@@ -7,6 +7,8 @@
  * Requires PHP:      7.2
  * Author:            Krunal Bhimajiyani
  * Author URI:        https://github.com/KrunalKB
+ * License:           GPL-2.0-or-later
+ * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  */
 
 if (!defined('ABSPATH')) {
