@@ -1,6 +1,5 @@
 === Email Scheduling ===
 Contributors: krunal265
-Donate link: https://example.com/
 Tags: email,cron
 Tested up to: 5.9
 Stable tag: 1.0.0
