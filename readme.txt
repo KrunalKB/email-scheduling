@@ -1,7 +1,7 @@
 === Email Scheduling ===
 Contributors      : krunal265
 Tags              : email, cron
-Tested  up to     : 5.9
+Tested  up to     : 5.9.3
 Stable  tag       : 1.0.0
 License           : GPL-2.0-or-later
 License URI       : https: //www.gnu.org/licenses/gpl-2.0.html
@@ -28,8 +28,8 @@ e.g.
 
 == Screenshots ==
 
-1. Screenshot-1.png
-2. Screenshot-2.png
+1. assets/screenshot/Screenshot-1.png
+2. assets/screenshot/Screenshot-2.png
 
 == Changelog ==
 

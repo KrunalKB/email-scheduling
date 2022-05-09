@@ -3,8 +3,8 @@
  * Plugin Name:       Email Scheduling
  * Description:       This plugin include cronjob to send email to the users and provide WYSIWYG editor to generate custom email template.
  * Version:           1.0.0
- * Requires at least: 5.2
- * Requires PHP:      7.2
+ * Requires at least: 5.8
+ * Requires PHP:      7.0
  * Author:            Krunal Bhimajiyani
  * Author URI:        https://github.com/KrunalKB
  * License:           GPL-2.0-or-later
@@ -18,10 +18,10 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- *  Class kb_controller
+ *  Class emsc_setup
  */
 
-class kb_Controller
+class emsc_setup
 {
     /**
      * Construct function
@@ -29,27 +29,32 @@ class kb_Controller
     public function __construct()
     {
         /* Use wp_mail_content_type hook to change the content type */
-        add_filter('wp_mail_content_type', array($this,'set_content_type'));
+        add_filter('wp_mail_content_type', array($this,'emsc_set_content_type'));
+
 
         /* Use admin_menu hook for adding custom admin menu */
-        add_action('admin_menu', array($this,'kb_admin_menu'));
-
-        /* Load up files for bulk email page */
-        add_action('admin_enqueue_scripts', array($this,'kb_email_script'));
+        add_action('admin_menu', array($this,'emsc_register_admin'));
 
         /* Load up files for test email page */
-        add_action('admin_enqueue_scripts', array($this,'kb_template_script'));
+        add_action('admin_enqueue_scripts', array($this,'emsc_email_script'));
+
+
+        /* Load up files for bulk email page */
+        add_action('admin_enqueue_scripts', array($this,'emsc_template_script'));
+
 
         /* Execute ajax callback function */
-        add_action('wp_ajax_email_template_hook', array($this,'kb_email_template'));
-        add_action('wp_ajax_my_email_hook', array($this,'kb_email_event'));
-        add_action('wp_ajax_my_ajax_hook', array($this,'kb_ajax_event'));
+        add_action('wp_ajax_email_template_hook', array($this,'emsc_email_template'));
+        add_action('wp_ajax_my_email_hook', array($this,'emsc_email_test'));
+        add_action('wp_ajax_my_ajax_hook', array($this,'emsc_schedule_cron'));
+
 
         /* Create a custom schedule for one minute */
-        add_filter('cron_schedules', array($this,'kb_cron_job_interval'));
+        add_filter('cron_schedules', array($this,'emsc_cron_job_interval'));
+
 
         /* Schedule custom cron */
-        add_action('custom_send_email', array($this,'kb_generate_email'));
+        add_action('custom_send_email', array($this,'emsc_generate_email'));
     }
 
     /**
@@ -58,7 +63,7 @@ class kb_Controller
      * @since 1.0.0
      *
      */
-    public function set_content_type($content_type)
+    public function emsc_set_content_type($content_type)
     {
         return 'text/html';
     }
@@ -69,25 +74,25 @@ class kb_Controller
      * @since 1.0.0
      *
      */
-    public function kb_admin_menu()
+    public function emsc_register_admin()
     {
-        $GLOBALS['email-template'] = add_menu_page(
+        $GLOBALS['emsc-email-template'] = add_menu_page(
             'Bulk Email',
             'Bulk Email',
             'manage_options',
-            'kb-template.php',
-            array($this,'kb_template_content'),
+            'emsc-template.php',
+            array($this,'emsc_template_content'),
             'dashicons-email-alt',
             111
         );
 
-        $GLOBALS['email-test'] = add_submenu_page(
-            'kb-template.php',
+        $GLOBALS['emsc-email-test'] = add_submenu_page(
+            'emsc-template.php',
             'Email Test',
             'Email Test',
             'manage_options',
-            'kb-email-test.php',
-            array($this,'kb_testing_content'),
+            'emsc-email-test.php',
+            array($this,'emsc_testing_content'),
             'dashicons-share-alt2',
         );
     }
@@ -98,10 +103,10 @@ class kb_Controller
      * @since 1.0.0
      *
      */
-    public function kb_template_content()
+    public function emsc_template_content()
     {
         ?>
-            <h2><?php _e('Email Template:'); ?></h2>
+            <h2><?php esc_html_e('Email Template:'); ?></h2>
         <?php
 
         if (empty(get_option("email_content"))) {
@@ -112,7 +117,7 @@ class kb_Controller
         $editor_id       = 'mail_template_id';
         $option_name     = 'mail_template';
         $default_content = html_entity_decode($default_content);
-        $default_content = stripslashes($default_content);
+        // $default_content = stripslashes($default_content);
 
         /* Create wysiwyg editor for email template */
 
@@ -123,12 +128,12 @@ class kb_Controller
             'teeny'         => true
         )); ?>
             <br> 
-            <button id="saveEmail"><?php _e('Save'); ?></button>
+            <button id="saveEmail"><?php esc_html_e('Save'); ?></button>
             <br>
             <div class="response"></div>
             <br><br>  
-            <span><b><?php _e('Send mail to user:'); ?></b></span><br><br>
-            <button id="sendEmail"><?php _e('Send Email'); ?></button>
+            <span><b><?php esc_html_e('Send mail to user:'); ?></b></span><br><br>
+            <button id="sendEmail"><?php esc_html_e('Send Email'); ?></button>
             <div class="resp"></div>
         <?php
     }
@@ -139,17 +144,17 @@ class kb_Controller
      * @since 1.0.0
      *
      */
-    public function kb_testing_content()
+    public function emsc_testing_content()
     {
         ?>
-        <h2><?php _e('Send a Test Email'); ?></h2>
+        <h2><?php esc_html_e('Send a Test Email'); ?></h2>
         <hr>
         <form class="emailForm">
-            <span class="field"><?php _e('Send to:'); ?></span>
+            <span class="field"><?php esc_html_e('Send to:'); ?></span>
             <input type="email" id="email" class="email">
-            <p class="desc"><?php _e('Enter email address where test email will be sent.'); ?></p>  
+            <p class="desc"><?php esc_html_e('Enter email address where test email will be sent.'); ?></p>  
             <hr><br>
-            <button class="email_btn"><?php _e('Send Email'); ?></button>
+            <button class="email_btn"><?php esc_html_e('Send Email'); ?></button>
             <img 
                 src="<?php echo plugin_dir_url(__FILE__).'assets/image/load.gif' ?>" 
                 class="loader" 
@@ -170,9 +175,9 @@ class kb_Controller
      * @since 1.0.0
      *
      */
-    public function kb_template_script($hook)
+    public function emsc_template_script($hook)
     {
-        if ($GLOBALS['email-template'] == $hook) {
+        if ($GLOBALS['emsc-email-template'] == $hook) {
             wp_enqueue_script(
                 'email_js',
                 plugin_dir_url(__FILE__) . 'assets/js/bulk-email.js',
@@ -200,9 +205,9 @@ class kb_Controller
      * @since 1.0.0
      *
      */
-    public function kb_email_script($hook)
+    public function emsc_email_script($hook)
     {
-        if ($GLOBALS['email-test'] == $hook) {
+        if ($GLOBALS['emsc-email-test'] == $hook) {
             wp_enqueue_script(
                 'test_js',
                 plugin_dir_url(__FILE__) . 'assets/js/test-email.js',
@@ -230,11 +235,13 @@ class kb_Controller
      * @since 1.0.0
      *
      */
-    public function kb_email_template()
+    public function emsc_email_template()
     {
-        $content        = $_POST['content'];
-        $email_body     = stripcslashes($content);
-        $update_content = update_option('email_content', $email_body);
+        if (isset($_POST['content'])) {
+            $content        = wp_kses_post($_POST['content']);
+            // $email_body  = stripcslashes($content);
+            $update_content = update_option('email_content', $content);
+        }
     }
 
     /**
@@ -243,12 +250,14 @@ class kb_Controller
      * @since 1.0.0
      *
      */
-    public function kb_email_event()
+    public function emsc_email_test()
     {
-        $usr_email      = $_POST["email"];
-        $email_template = html_entity_decode(get_option('email_content'));
-        $var_content    = str_replace("%", "", $email_template);
-        wp_mail($usr_email, 'Testing', $var_content);
+        if (isset($_POST["email"])) {
+            $usr_email      = sanitize_email($_POST["email"]);
+            $email_template = html_entity_decode(get_option('email_content'));
+            $var_content    = str_replace("%", "", $email_template);
+            wp_mail($usr_email, 'Testing', $var_content);
+        }
     }
 
     /**
@@ -258,7 +267,7 @@ class kb_Controller
      *
      * @param Array $schedules
      */
-    public function kb_cron_job_interval($schedules)
+    public function emsc_cron_job_interval($schedules)
     {
         if (! isset($schedules['one_minute'])) {
             $schedules['one_minute'] = array(
@@ -275,13 +284,13 @@ class kb_Controller
      * @since 1.0.0
      *
      */
-    public function kb_generate_email()
+    public function emsc_generate_email()
     {
         $bulk_user_id        = get_transient('bulk_user_email');                        //GETTING ALL USER-ID FROM DATABASE
         $bulk_email_track    = get_transient('bulk_email_track');
 
         $custom_mail_content = html_entity_decode(get_option('email_content'));         //GETTING TEMPLATE CONTENT FROM DATABASE
-        $email_content       = strip_tags($custom_mail_content);
+        // $email_content    = strip_tags($custom_mail_content);
 
         $query_info          = new WP_User_Query(array('include' => $bulk_user_id));    //GETTING USER DETAIL
         $users_info          = $query_info->results;
@@ -314,7 +323,7 @@ class kb_Controller
      * @since 1.0.0
      *
      */
-    public function kb_ajax_event()
+    public function emsc_schedule_cron()
     {
         $all_users = get_users();
         $user_info = [];
@@ -334,7 +343,8 @@ class kb_Controller
     }
 }
 
-$kb_Controller = new kb_Controller();
+$emsc_setup = new emsc_setup();
+
 
 
 ?>
