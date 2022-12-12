@@ -12,6 +12,7 @@
         type: "POST",
         data: {
           action: "my_email_hook",
+          nonce: myVar.nonce,
           email: email,
         },
         success: function (response) {
